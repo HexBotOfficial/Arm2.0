@@ -14,6 +14,15 @@
 
 #define USB_SER                     &Serial                                            //USB串口设置
 
+
+#define MINDIS 135
+#define MAXDIS 325
+#define MIN2ANGLE 0.48
+#define MAX2ANGLE 2.88
+#define MAXMAINANGLE 78
+#define DEBUGNO
+
+
 //mechanical constraints        机械臂尺寸，详细尺寸说明见说明书
 
 /*************函数详细说明请参照CPP文件*************/
@@ -22,7 +31,7 @@ class Arm{
 
 private:
 //const double a = 120, b = 40, c = 188, d = 24.28, e = 79, f = 21.6, g = 12, h = 34.8;
-const double a = 120, b = 40, c = 159.30, d = 16.92, e = 51.75, f = 51.50, g = 8, h = 28.0;
+const double a = 120, b = 40, c = 159.30, d = 16.92, e = 51.75, f = 51.50, g = 8, h = 28.80;
 
     HardwareSerial *comSer;
     
@@ -74,6 +83,9 @@ public:
     void Get_Offset();
     double Rad2Angle(double rad);
     double Pos2Rad(word pos);
+	
+	boolean judgeMust2angle();
+	boolean judgeTheta();
 };
 
 extern Arm MyArm;

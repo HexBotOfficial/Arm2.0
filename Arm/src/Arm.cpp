@@ -1,5 +1,8 @@
 #include <Arm.h>
 
+#define DEBUGNO
+
+
 Arm MyArm;                                                                   //初始化一个机械臂对象
 
 Steer_protocol  steer_tmp(&Serial1, 10);                         //初始化一个舵机底层对象，负责舵机检测
@@ -23,7 +26,13 @@ void Arm::begin(HardwareSerial *desireSer)
     comSer->setTimeout(5);
 
     Steer_Detect();
-    //Steer_Num = 7;
+	
+	#ifdef DEBUG
+    Steer_Num = 7;
+	#endif
+	
+	Serial.println(Steer_Num);
+	
     Para_Init();
     Get_Offset();
 }
@@ -132,13 +141,15 @@ void Arm::move_to_position( double x_ , double y_, double z_ , word runtime)
         boolean judge = MyArm_Protect.Position_Protect(thet, sizeof(thet)/sizeof(thet[0]));
         if(judge == false){ Serial.print("out of angle limit"); return false;}
     #endif
-
-    for(byte i = 0 ; i < 3; i++)   
-    {
-      pos_goal[i] = Rad2Pos(theta[i]) + offPos[i];
-      steer[i] ->Set_Steer_position_runtime(pos_goal[i] , runtime);
-  //    Serial.println(pos_goal[i] );
-    }
+	
+	if(judgeMust2angle() && runtime > 50){
+		for(byte i = 0 ; i < 3; i++)   
+		{
+		  pos_goal[i] = Rad2Pos(theta[i]) + offPos[i];
+		  steer[i] ->Set_Steer_position_runtime(pos_goal[i] , runtime);
+	  //    Serial.println(pos_goal[i] );
+		}
+	}
 }
 
  /**
@@ -165,11 +176,13 @@ void Arm::move_to_position( PVector pt , word runtime)
         if(judge == false){ Serial.print("out of angle limit"); return false;}
     #endif
 
-    for(byte i = 0 ; i < 3; i++)   
-    {
-      pos_goal[i] = Rad2Pos(theta[i]) + offPos[i];
-      steer[i] ->Set_Steer_position_runtime(pos_goal[i], runtime);
-    }
+	if(judgeMust2angle() && runtime > 50){
+		for(byte i = 0 ; i < 3; i++)   
+		{
+		  pos_goal[i] = Rad2Pos(theta[i]) + offPos[i];
+		  steer[i] ->Set_Steer_position_runtime(pos_goal[i], runtime);
+		}
+	}
 }
 
  /**
@@ -548,3 +561,51 @@ void Arm::get_Arm_pos(word pos[])
       pos[i] = (word)(steer[i]->Position_Current[0]) *256 + steer[i]->Position_Current[1];
     }
 }
+
+
+//t2 - 90
+//180 - t1
+//270 - t1 - t2
+boolean Arm::judgeMust2angle(){
+  if(judgeTheta()){
+      double must2angle = 4.71 - MyArm.theta[1] - MyArm.theta[2];
+      #ifdef DEBUG
+      Serial.println("must2angle = ");
+      Serial.println(must2angle/3.14*180);
+      #endif
+      if(must2angle > MIN2ANGLE && must2angle < MAX2ANGLE){  //判断两个大边夹角
+          if(MyArm.theta[1] > -0.174 && MyArm.theta[1] < 2.79){ //判断第一大边夹角
+            //计算mainangle
+            double mainangle = ( MyArm.theta[1] - asin( (176.22*sin(must2angle)) / (sqrt(67362.8 - 67157.442*cos(must2angle))) ) )/3.14*180;
+            #ifdef DEBUG
+            Serial.println();
+            Serial.print("mainangle = ");
+            Serial.println(mainangle);
+            #endif
+            if( mainangle < MAXMAINANGLE){   //判断主角度，就是末端点到原点的连线与地面的夹角
+               return true;
+            }
+			Serial.println("STYLE:4 :Beyond the limit of distance");
+            return false;
+          }
+		  Serial.println("STYLE:3 :Beyond the limit of distance");
+          return false;
+       }
+	   Serial.println("STYLE:2 :Beyond the limit of distance");
+       return false;
+  }
+  Serial.println("STYLE:1 :Beyond the limit of distance");
+  return false;
+}
+
+boolean Arm::judgeTheta(){
+     if(MyArm.Steer_Num < 3){return false;}
+     else{
+        for( int i=0; i < 3; i++){
+          if(!((MyArm.theta[i] >= 0) && (MyArm.theta[i] <= 3.14))){
+            return false;
+          }   
+        }
+      }
+      return true;
+ }

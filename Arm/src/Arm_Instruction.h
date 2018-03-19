@@ -21,7 +21,9 @@ const double thetaxMax[SERVO_NUM] = {PI, PI, 2.0071287, 2.9670596, PI, PI, PI/2}
 class Arm_Instruction {
 	
   private:	
-	const double a = 120, b = 40, c = 188, d = 24.28, e = 79, f = 21.6, g = 12, h = 34.8;
+	//const double a = 120, b = 40, c = 188, d = 24.28, e = 79, f = 21.6, g = 12, h = 34.8;
+	const double a = 120, b = 40, c = 159.30, d = 16.92, e = 51.75, f = 51.50, g = 8, h = 28.80;
+
 	double thetax[SERVO_NUM];
 	PVector joint[9];
 	PVector j5, j6, vec56, vec67;
